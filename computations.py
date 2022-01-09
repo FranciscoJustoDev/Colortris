@@ -24,11 +24,14 @@ def sector_load():
 
 def sector_map_pop():
     sect_map = []
-    for y in range(0, N_COLS):
-        for x in range(0, N_ROWS):
-            sect_map.append([0])
+    for y in range(0, N_ROWS):
+        row_list = []
+        for x in range(0, N_COLS):
+            row_list.append(0)
+        sect_map.append(row_list)
     return sect_map
 
+# change from random to sector positions
 def sector_anchors():
     spawns = []
     x = GRIDSTEP / 2

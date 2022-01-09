@@ -8,6 +8,7 @@ class Chip(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((GRIDSTEP, GRIDSTEP))
         self.type = rdm.randint(1, 4)
+        self.sector = ()
         self.color = CHIP_COLORS[self.type]
         self.image.fill(self.color)
         self.rect = self.image.get_rect()
@@ -17,9 +18,10 @@ class Chip(pg.sprite.Sprite):
         self.mov = True
         self.sector_data = sector_data
         self.locked = False
+        self.tracked = False
     
-    def get_sector(self, pos, sector_data):
-        for e in sector_data:
+    def get_sector(self, pos, sec_data):
+        for e in sec_data:
             if pos[0] in range(e[1][0], e[1][1]) and pos[1] in range(e[2][0], e[2][1]):
                 return e[0]
     
@@ -27,13 +29,10 @@ class Chip(pg.sprite.Sprite):
         if self.rect.bottom < HEIGHT:
                 self.rect.y += SPEED
         else:
-            self.rect.bottom = HEIGHT
+            self.rect.bottom >= HEIGHT
             self.mov = False
 
     def update(self):
         if self.mov:
-            self.movement()
-        elif not(self.locked):
-            # lock it and update sector map!
             self.sector = self.get_sector((self.rect.centerx, self.rect.centery), self.sector_data)
-            self.locked = True
+            self.movement()

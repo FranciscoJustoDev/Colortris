@@ -1,6 +1,8 @@
 import pygame as pg
 import random as rdm
 import sys
+
+from pygame import sprite
 from settings import *
 from sprites import *
 from computations import *
@@ -15,15 +17,14 @@ class Game:
 
     def load_data(self):
         self.sector_data = sector_load()
+        self.sector_map = sector_map_pop()
 
     def new(self):
         # init all variables and setup
         self.all_sprites = pg.sprite.Group()
         self.chip_sprites = pg.sprite.Group()
         self.spawn_points = sector_anchors()
-        self.chip = Chip(self.sector_data, self.spawn_points)
-        self.chip_sprites.add(self.chip)
-        self.all_sprites.add(self.chip)
+        self.no_chips = True
 
     def run(self):
         # Game loop
@@ -41,6 +42,7 @@ class Game:
     def update(self):
         self.all_sprites.update()
         self.spawn_chip()
+        self.update_sector_map()
 
     def draw_grid(self):
         for x in range(0, WIDTH, GRIDSTEP):
@@ -60,13 +62,30 @@ class Game:
                 self.quit()
     
     def spawn_chip(self):
+        if self.no_chips:
+            self.no_chips = False
+            self.chip = Chip(self.sector_data, self.spawn_points)
+            self.chip_sprites.add(self.chip)
+            self.all_sprites.add(self.chip)
+
         for chip in self.chip_sprites:
-            if self.chip.mov == True:
-                pass
-            else:
+            if not(chip.mov) and not(chip.locked) and not(chip.tracked):
+                chip.locked = True
                 self.chip = Chip(self.sector_data, self.spawn_points)
                 self.chip_sprites.add(self.chip)
                 self.all_sprites.add(self.chip)
+    
+    def chip_mov(self):
+        pass
+
+    def update_sector_map(self):
+        for chip in self.chip_sprites:
+            if not(chip.mov) and chip.locked and not(chip.tracked):
+                x = chip.sector[0]
+                y = chip.sector[1]
+                self.sector_map[y][x] = chip.type
+                chip.tracked = True
+                print(self.sector_map)
     
     def show_start_screen(self):
         pass
