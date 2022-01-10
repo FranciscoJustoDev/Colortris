@@ -44,6 +44,7 @@ class Game:
         self.spawn_chip()
         self.dwn_mov()
         self.update_sector_map()
+        self.chip_logic()
 
     def draw_grid(self):
         for x in range(0, WIDTH, GRIDSTEP):
@@ -118,8 +119,42 @@ class Game:
                 y = chip.sector[1]
                 self.sector_map[y][x] = chip.type
                 chip.tracked = True
-                print(self.sector_map)
     
+    def chip_logic(self):
+        hor = False
+        ver = False
+        to_kill = []
+        for chip in self.chip_sprites:
+            if not(chip.active) and chip.locked and chip.tracked:
+                if chip.sector[0] > 0 and chip.sector[0] < N_COLS - 1:
+                    if self.sector_map[chip.sector[1]][chip.sector[0] + 1] == chip.type:
+                        if self.sector_map[chip.sector[1]][chip.sector[0] - 1] == chip.type:
+                            hor = True
+                            to_kill = (chip.sector[0], chip.sector[1]), (chip.sector[0] + 1, chip.sector[1]), (chip.sector[0] - 1, chip.sector[1])
+                if chip.sector[1] < N_ROWS - 1:
+                    if self.sector_map[chip.sector[1] + 1][chip.sector[0]] == chip.type:
+                        if self.sector_map[chip.sector[1] - 1][chip.sector[0]] == chip.type:
+                            ver = True
+                            to_kill = (chip.sector[0], chip.sector[1]), (chip.sector[0], chip.sector[1] + 1), (chip.sector[0], chip.sector[1] - 1)
+        if hor:
+            for chip in self.chip_sprites:
+                if chip.sector == to_kill[0] or chip.sector == to_kill[1] or chip.sector == to_kill[2]:
+                    chip.kill()
+                    self.sector_map[chip.sector[1]][chip.sector[0]] = 0
+        if ver:
+            for chip in self.chip_sprites:
+                if chip.sector == to_kill[0] or chip.sector == to_kill[1] or chip.sector == to_kill[2]:
+                    chip.kill()
+                    self.sector_map[chip.sector[1]][chip.sector[0]] = 0
+        
+        for chip in self.chip_sprites:
+            if not(chip.active) and chip.locked and chip.tracked:
+                if chip.sector[1] < N_ROWS - 1:
+                    if self.sector_map[chip.sector[1] + 1][chip.sector[0]] == 0:
+                        chip.tracked = False
+                        chip.rect.y += GRIDSTEP
+                        self.sector_map[chip.sector[1]][chip.sector[0]] = 0
+
     def show_start_screen(self):
         pass
     
