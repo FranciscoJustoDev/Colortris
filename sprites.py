@@ -4,35 +4,29 @@ from settings import *
 import random as rdm
 
 class Chip(pg.sprite.Sprite):
-    def __init__(self, sector_data, spwn):
+    def __init__(self, sector_data, current_column):
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((GRIDSTEP, GRIDSTEP))
         self.type = rdm.randint(1, 4)
-        self.sector = ()
+        self.sector = (-1, -1)
         self.color = CHIP_COLORS[self.type]
         self.image.fill(self.color)
         self.rect = self.image.get_rect()
-        self.l = len(spwn) - 1
-        self.x = rdm.randint(0, self.l)
-        self.rect.center = (spwn[self.x], -GRIDSTEP)
-        self.mov = True
+        # start in current column
+        self.rect.center = (current_column, GRIDSTEP - (GRIDSTEP / 2))
         self.sector_data = sector_data
+        # currently moving
+        self.active = True
+        # chip before currently active
         self.locked = False
+        # acknowledge in the map
         self.tracked = False
     
     def get_sector(self, pos, sec_data):
+        # checks if xy pos is in given range
         for e in sec_data:
             if pos[0] in range(e[1][0], e[1][1]) and pos[1] in range(e[2][0], e[2][1]):
                 return e[0]
-    
-    def movement(self):
-        if self.rect.bottom < HEIGHT:
-                self.rect.y += SPEED
-        else:
-            self.rect.bottom >= HEIGHT
-            self.mov = False
 
     def update(self):
-        if self.mov:
-            self.sector = self.get_sector((self.rect.centerx, self.rect.centery), self.sector_data)
-            self.movement()
+        self.sector = self.get_sector((self.rect.centerx, self.rect.centery), self.sector_data)

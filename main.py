@@ -23,7 +23,7 @@ class Game:
         # init all variables and setup
         self.all_sprites = pg.sprite.Group()
         self.chip_sprites = pg.sprite.Group()
-        self.spawn_points = sector_anchors()
+        self.col_pos = WIDTH / 2
         self.no_chips = True
 
     def run(self):
@@ -42,6 +42,7 @@ class Game:
     def update(self):
         self.all_sprites.update()
         self.spawn_chip()
+        self.dwn_mov()
         self.update_sector_map()
 
     def draw_grid(self):
@@ -60,27 +61,59 @@ class Game:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_LEFT:
+                    for chip in self.chip_sprites:
+                        if chip.active:
+                            for e in self.sector_data:
+                                if e[0] == chip.sector:
+                                    if chip.rect.x > 0:
+                                        if self.sector_map[chip.sector[1]][chip.sector[0] - 1] == 0:
+                                            chip.rect.x -= GRIDSTEP
+                                            self.col_pos -= GRIDSTEP
+                if event.key == pg.K_RIGHT:
+                    for chip in self.chip_sprites:
+                        if chip.active:
+                            for e in self.sector_data:
+                                if e[0] == chip.sector:
+                                    if chip.rect.x < WIDTH - GRIDSTEP:
+                                        if self.sector_map[chip.sector[1]][chip.sector[0] + 1] == 0:
+                                            chip.rect.x += GRIDSTEP
+                                            self.col_pos += GRIDSTEP
     
     def spawn_chip(self):
         if self.no_chips:
             self.no_chips = False
-            self.chip = Chip(self.sector_data, self.spawn_points)
+            self.chip = Chip(self.sector_data, self.col_pos)
             self.chip_sprites.add(self.chip)
             self.all_sprites.add(self.chip)
 
         for chip in self.chip_sprites:
-            if not(chip.mov) and not(chip.locked) and not(chip.tracked):
+            if not(chip.active) and not(chip.locked) and not(chip.tracked):
                 chip.locked = True
-                self.chip = Chip(self.sector_data, self.spawn_points)
+                self.chip = Chip(self.sector_data, self.col_pos)
                 self.chip_sprites.add(self.chip)
                 self.all_sprites.add(self.chip)
     
-    def chip_mov(self):
-        pass
+    def dwn_mov(self):
+        for chip in self.chip_sprites:
+            if chip.active and not(chip.locked) and not(chip.tracked):
+                if chip.active:
+                    if chip.sector[1] < N_ROWS - 1:
+                        if self.sector_map[chip.sector[1] + 1][chip.sector[0]] != 0:
+                            for e in self.sector_data:
+                                if e[0] == chip.sector:
+                                    chip.rect.centery = e[4]
+                                    chip.active = False
+                    if chip.rect.bottom <= HEIGHT:
+                            chip.rect.y += SPEED
+                    else:
+                        chip.rect.bottom = HEIGHT
+                        chip.active = False
 
     def update_sector_map(self):
         for chip in self.chip_sprites:
-            if not(chip.mov) and chip.locked and not(chip.tracked):
+            if not(chip.active) and chip.locked and not(chip.tracked):
                 x = chip.sector[0]
                 y = chip.sector[1]
                 self.sector_map[y][x] = chip.type
