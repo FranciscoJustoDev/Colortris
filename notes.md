@@ -2,10 +2,9 @@
 >
 >## To Do
 >
-> - create sector map - keeps track of chips positions.  
-> - sfx, music
-> - vfx, animations
-> - start and go menus
-> - score and high score
+> - sfx and music - sfx manager.  
+> - vfx and animation manager.  
+> - start and game over menus.  
+> - score and high score - dynamic interface.  
 >
 ## Fix / Handle
