@@ -1,7 +1,7 @@
 from settings import *
 
 def grid_data_load():
-    '''Returns a list -> tuple ->sector coordinates, tuple -> x range, tuple -> y range'''
+    '''Returns sector coordinates (x, y), x range, y range, xcenter, ycenter'''
     # cell pos and corresponding real xy range pos
     grid_data = []
     for grid_row in range(0, N_ROWS):

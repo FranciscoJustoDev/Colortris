@@ -1,6 +1,7 @@
 import pygame as pg
 import random as rdm
 import sys
+from os import path
 
 from pygame import sprite
 from pygame.constants import KEYDOWN
@@ -21,11 +22,11 @@ class Game:
         self.grid_map = grid_map_pop()
 
     def new(self):
-        # init all variables and setup
+        # init all variables and level setup
         self.all_sprites = pg.sprite.Group()
-        self.chip_sprites = pg.sprite.Group()
-        self.col_pos = GRID_WIDTH / 2 + (GRID_ORIGIN[0] - GRID_ORIGIN[0] / 2)
-        self.no_chips = True
+        self.monster_sprites = pg.sprite.Group()
+        self.spawn_column = GRID_WIDTH / 2 + (GRID_ORIGIN[0] - GRID_ORIGIN[0] / 2)
+        self.no_monsters = True
         self.speed = 1
 
     def run(self):
@@ -43,12 +44,13 @@ class Game:
     
     def update(self):
         self.all_sprites.update()
-        self.spawn_chip()
+        self.spawn_monster()
         self.dwn_mov()
         self.update_grid_map()
-        self.chip_logic()
+        self.monster_logic()
 
     def draw_grid(self):
+        # Visual aid for development
         for x in range(GRID_ORIGIN[0], GRID_WIDTH, CELL_SIZE):
             pg.draw.line(self.screen, WHITE, (x, GRID_ORIGIN[1]), (x, GRID_HEIGHT))
         pg.draw.line(self.screen, WHITE, (GRID_ORIGIN[0], GRID_HEIGHT), (GRID_WIDTH, GRID_HEIGHT))
@@ -70,135 +72,137 @@ class Game:
 
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_LEFT:
-                    for chip in self.chip_sprites:
-                        if chip.active:
+                    for monster in self.monster_sprites:
+                        if monster.active:
                             for e in self.grid_data:
-                                if e[0] == chip.sector:
-                                    if chip.rect.x > GRID_ORIGIN[0]:
-                                        if self.grid_map[chip.sector[1]][chip.sector[0] - 1] == 0:
-                                            chip.rect.x -= CELL_SIZE
-                                            self.col_pos -= CELL_SIZE
+                                if e[0] == monster.sector:
+                                    if monster.rect.x > GRID_ORIGIN[0]:
+                                        if self.grid_map[monster.sector[1]][monster.sector[0] - 1] == 0:
+                                            monster.rect.x -= CELL_SIZE
+                                            self.spawn_column -= CELL_SIZE
                 if event.key == pg.K_RIGHT:
-                    for chip in self.chip_sprites:
-                        if chip.active:
+                    for monster in self.monster_sprites:
+                        if monster.active:
                             for e in self.grid_data:
-                                if e[0] == chip.sector:
-                                    if chip.rect.x < GRID_WIDTH - CELL_SIZE:
-                                        if self.grid_map[chip.sector[1]][chip.sector[0] + 1] == 0:
-                                            chip.rect.x += CELL_SIZE
-                                            self.col_pos += CELL_SIZE
+                                if e[0] == monster.sector:
+                                    if monster.rect.x < GRID_WIDTH - CELL_SIZE:
+                                        if self.grid_map[monster.sector[1]][monster.sector[0] + 1] == 0:
+                                            monster.rect.x += CELL_SIZE
+                                            self.spawn_column += CELL_SIZE
                 if event.key == pg.K_DOWN:
-                    for chip in self.chip_sprites:
-                        if chip.active:
+                    for monster in self.monster_sprites:
+                        if monster.active:
                             self.speed = 2
 
             if event.type == pg.KEYUP:
                 if event.key == pg.K_DOWN:
-                    for chip in self.chip_sprites:
-                        if chip.active:
+                    for monster in self.monster_sprites:
+                        if monster.active:
                             self.speed = 1
     
-    def spawn_chip(self):
-        if self.no_chips:
-            self.no_chips = False
-            self.chip = Chip(self.grid_data, self.col_pos)
-            self.chip_sprites.add(self.chip)
-            self.all_sprites.add(self.chip)
+    def spawn_monster(self):
+        monster_type = rdm.randint(1, 4)
+        if self.no_monsters:
+            self.no_monsters = False
+            self.monster = Monster(self.grid_data, self.spawn_column, monster_type)
+            self.monster_sprites.add(self.monster)
+            self.all_sprites.add(self.monster)
 
-        for chip in self.chip_sprites:
-            if not(chip.active) and not(chip.locked) and not(chip.tracked):
-                chip.locked = True
-                self.chip = Chip(self.grid_data, self.col_pos)
-                self.chip_sprites.add(self.chip)
-                self.all_sprites.add(self.chip)
+        for monster in self.monster_sprites:
+            if not(monster.active) and not(monster.locked) and not(monster.tracked):
+                monster.locked = True
+                self.monster = Monster(self.grid_data, self.spawn_column, monster_type)
+                self.monster_sprites.add(self.monster)
+                self.all_sprites.add(self.monster)
     
     def dwn_mov(self):
-        for chip in self.chip_sprites:
-            if chip.active and not(chip.locked) and not(chip.tracked):
-                if chip.sector[1] < N_ROWS - 1:
-                    if self.grid_map[chip.sector[1] + 1][chip.sector[0]] != 0:
+        for monster in self.monster_sprites:
+            if monster.active and not(monster.locked) and not(monster.tracked):
+                if monster.sector[1] < N_ROWS - 1:
+                    if self.grid_map[monster.sector[1] + 1][monster.sector[0]] != 0:
                         for e in self.grid_data:
-                            if e[0] == chip.sector:
-                                chip.rect.centery = e[4]
-                                chip.active = False
-                if chip.active:
-                    if chip.sector[1] < N_ROWS - 1:
-                        chip.rect.y += SPEED * self.speed
+                            if e[0] == monster.sector:
+                                monster.rect.centery = e[4]
+                                monster.active = False
+                if monster.active:
+                    if monster.sector[1] < N_ROWS - 1:
+                        monster.rect.y += SPEED * self.speed
                     else:
                         for e in self.grid_data:
-                            if chip.sector == e[0]:
-                                chip.rect.centery = e[4]
-                                chip.active = False
+                            if monster.sector == e[0]:
+                                monster.rect.centery = e[4]
+                                monster.active = False
 
     def update_grid_map(self):
-        for chip in self.chip_sprites:
-            if not(chip.active) and chip.locked and not(chip.tracked):
-                x = chip.sector[0]
-                y = chip.sector[1]
-                self.grid_map[y][x] = chip.type
-                chip.tracked = True
+        for monster in self.monster_sprites:
+            if not(monster.active) and monster.locked and not(monster.tracked):
+                x = monster.sector[0]
+                y = monster.sector[1]
+                self.grid_map[y][x] = monster.type
+                monster.tracked = True
     
-    def chip_logic(self):
+    def monster_logic(self):
         hor = False
         ver = False
         hor_kill_queue = []
         ver_kill_queue = []
         # Check for basic match!!
-        for chip in self.chip_sprites:
-            if not(chip.active) and chip.locked and chip.tracked:
-                if chip.sector[0] > 0 and chip.sector[0] < N_COLS - 1:
-                    if self.grid_map[chip.sector[1]][chip.sector[0] + 1] == chip.type:
-                        if self.grid_map[chip.sector[1]][chip.sector[0] - 1] == chip.type:
+        for monster in self.monster_sprites:
+            if not(monster.active) and monster.locked and monster.tracked:
+                if monster.sector[0] > 0 and monster.sector[0] < N_COLS - 1:
+                    if self.grid_map[monster.sector[1]][monster.sector[0] + 1] == monster.type:
+                        if self.grid_map[monster.sector[1]][monster.sector[0] - 1] == monster.type:
                             hor = True
-                            hor_kill_queue = [(chip.sector[0] - 1, chip.sector[1]), (chip.sector[0], chip.sector[1]), (chip.sector[0] + 1, chip.sector[1])]
-                if chip.sector[1] < N_ROWS - 1 and chip.sector[1] > 0:
-                    if self.grid_map[chip.sector[1] + 1][chip.sector[0]] == chip.type:
-                        if self.grid_map[chip.sector[1] - 1][chip.sector[0]] == chip.type:
+                            hor_kill_queue = [(monster.sector[0] - 1, monster.sector[1]), (monster.sector[0], monster.sector[1]), (monster.sector[0] + 1, monster.sector[1])]
+                if monster.sector[1] < N_ROWS - 1 and monster.sector[1] > 0:
+                    if self.grid_map[monster.sector[1] + 1][monster.sector[0]] == monster.type:
+                        if self.grid_map[monster.sector[1] - 1][monster.sector[0]] == monster.type:
                             ver = True
-                            ver_kill_queue = [(chip.sector[0], chip.sector[1] - 1), (chip.sector[0], chip.sector[1]), (chip.sector[0], chip.sector[1] + 1)]
+                            ver_kill_queue = [(monster.sector[0], monster.sector[1] - 1), (monster.sector[0], monster.sector[1]), (monster.sector[0], monster.sector[1] + 1)]
         
         # Check for additional matches!!
         if hor:
-            for chip in self.chip_sprites:
-                if chip.sector == hor_kill_queue[0]:
-                    if chip.sector[0] > 0:
-                        if self.grid_map[chip.sector[1]][chip.sector[0] - 1] == chip.type:
-                            hor_kill_queue.append((chip.sector[0] - 1, chip.sector[1]))
-                elif chip.sector == hor_kill_queue[2]:
-                    if chip.sector[0] < N_COLS - 1:
-                        if self.grid_map[chip.sector[1]][chip.sector[0] + 1] == chip.type:
-                            hor_kill_queue.append((chip.sector[0] + 1, chip.sector[1]))
+            for monster in self.monster_sprites:
+                if monster.sector == hor_kill_queue[0]:
+                    if monster.sector[0] > 0:
+                        if self.grid_map[monster.sector[1]][monster.sector[0] - 1] == monster.type:
+                            hor_kill_queue.append((monster.sector[0] - 1, monster.sector[1]))
+                elif monster.sector == hor_kill_queue[2]:
+                    if monster.sector[0] < N_COLS - 1:
+                        if self.grid_map[monster.sector[1]][monster.sector[0] + 1] == monster.type:
+                            hor_kill_queue.append((monster.sector[0] + 1, monster.sector[1]))
         if ver:
-            if chip.sector == ver_kill_queue[0]:
-                if chip.sector[1] > 0:
-                    if self.grid_map[chip.sector[1] - 1][chip.sector[0]] == chip.type:
-                        ver_kill_queue.append((chip.sector[0], chip.sector[1] - 1))
-            elif chip.sector == ver_kill_queue[2]:
-                if chip.sector[1] < N_ROWS - 1:
-                    if self.grid_map[chip.sector[1] + 1][chip.sector[0]] == chip.type:
-                        ver_kill_queue.append((chip.sector[0], chip.sector[1] + 1))
+            for monster in self.monster_sprites:
+                if monster.sector == ver_kill_queue[0]:
+                    if monster.sector[1] > 0:
+                        if self.grid_map[monster.sector[1] - 1][monster.sector[0]] == monster.type:
+                            ver_kill_queue.append((monster.sector[0], monster.sector[1] - 1))
+                elif monster.sector == ver_kill_queue[2]:
+                    if monster.sector[1] < N_ROWS - 1:
+                        if self.grid_map[monster.sector[1] + 1][monster.sector[0]] == monster.type:
+                            ver_kill_queue.append((monster.sector[0], monster.sector[1] + 1))
         
         # Execute order 66... >:3
-        for chip in self.chip_sprites:
+        for monster in self.monster_sprites:
                 for k in hor_kill_queue:
-                    if chip.sector == k:
-                        chip.kill()
-                        self.grid_map[chip.sector[1]][chip.sector[0]] = 0
+                    if monster.sector == k:
+                        monster.kill()
+                        self.grid_map[monster.sector[1]][monster.sector[0]] = 0
 
-        for chip in self.chip_sprites:
+        for monster in self.monster_sprites:
                 for k in ver_kill_queue:
-                    if chip.sector == k:
-                        chip.kill()
-                        self.grid_map[chip.sector[1]][chip.sector[0]] = 0
+                    if monster.sector == k:
+                        monster.kill()
+                        self.grid_map[monster.sector[1]][monster.sector[0]] = 0
 
         # update floating sprites
-        for chip in self.chip_sprites:
-            if not(chip.active) and chip.locked and chip.tracked:
-                if chip.sector[1] < N_ROWS - 1:
-                    if self.grid_map[chip.sector[1] + 1][chip.sector[0]] == 0:
-                        chip.tracked = False
-                        chip.rect.y += CELL_SIZE
-                        self.grid_map[chip.sector[1]][chip.sector[0]] = 0
+        for monster in self.monster_sprites:
+            if not(monster.active) and monster.locked and monster.tracked:
+                if monster.sector[1] < N_ROWS - 1:
+                    if self.grid_map[monster.sector[1] + 1][monster.sector[0]] == 0:
+                        monster.tracked = False
+                        monster.rect.y += CELL_SIZE
+                        self.grid_map[monster.sector[1]][monster.sector[0]] = 0
 
     def show_start_screen(self):
         pass

@@ -3,17 +3,17 @@ from computations import *
 from settings import *
 import random as rdm
 
-class Chip(pg.sprite.Sprite):
-    def __init__(self, sector_data, current_column):
+class Monster(pg.sprite.Sprite):
+    def __init__(self, sector_data, spawn_col, monster_type):
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((CELL_SIZE, CELL_SIZE))
-        self.type = rdm.randint(1, 4)
+        self.type = monster_type
         self.sector = (-1, -1)
         self.color = CHIP_COLORS[self.type]
         self.image.fill(self.color)
         self.rect = self.image.get_rect()
         # start in current column
-        self.rect.center = (current_column, GRID_ORIGIN[1] + CELL_SIZE / 2)
+        self.rect.center = (spawn_col, GRID_ORIGIN[1] + CELL_SIZE / 2)
         self.sector_data = sector_data
         # currently moving
         self.active = True
