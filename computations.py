@@ -18,8 +18,8 @@ def grid_data_load():
                     sector_start = (xcurrent, ycurrent)
                     xrange = (xcurrent, xpos)
                     yrange = (ycurrent, ypos)
-                    xcenter = (xpos - (CELL_SIZE / 2))
-                    ycenter = (ypos - (CELL_SIZE / 2))
+                    xcenter = (xpos - (CELL_SIZE / 2) + 1)
+                    ycenter = (ypos - (CELL_SIZE / 2) + 1)
                     xpos += 1
                 ypos += 1
             grid_data.append([sector, xrange, yrange, xcenter, ycenter])

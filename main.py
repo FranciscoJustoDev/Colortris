@@ -121,11 +121,14 @@ class Game:
                             if e[0] == chip.sector:
                                 chip.rect.centery = e[4]
                                 chip.active = False
-                if chip.rect.bottom < GRID_HEIGHT:
+                if chip.active:
+                    if chip.sector[1] < N_ROWS - 1:
                         chip.rect.y += SPEED * self.speed
-                else:
-                    chip.rect.bottom = GRID_HEIGHT
-                    chip.active = False
+                    else:
+                        for e in self.grid_data:
+                            if chip.sector == e[0]:
+                                chip.rect.centery = e[4]
+                                chip.active = False
 
     def update_grid_map(self):
         for chip in self.chip_sprites:

@@ -17,9 +17,13 @@ TEAL = (0, 128, 128)
 NAVY = (0, 0, 128)
 
 # WINDOW
+'''
+WIDTH = 1280
+HEIGHT = 720
+'''
 WIDTH = 512
 HEIGHT = 672
-TITLE = "Colortris"
+TITLE = "<3 Monster Cupid <3"
 
 # Grid
 GRID_ORIGIN = (32, 16)
