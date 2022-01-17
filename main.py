@@ -129,7 +129,7 @@ class Game:
         now = pg.time.get_ticks()
         if now - self.last_update > 800:
             self.last_update = now
-            if self.level_frame > 11:
+            if self.level_frame > 10:
                 self.level_frame = 0
             else:
                 self.level_frame += 1
