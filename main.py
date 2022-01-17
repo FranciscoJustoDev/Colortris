@@ -85,7 +85,7 @@ class Game:
         self.no_monsters = True
         self.speed = 1
         self.last_update = pg.time.get_ticks()
-        self.bg_frames = 0
+        self.level_frame = 0
 
     def run(self):
         # Game loop
@@ -118,7 +118,9 @@ class Game:
         pg.draw.line(self.screen, WHITE, (GRID_WIDTH, GRID_ORIGIN[1]), (GRID_WIDTH, GRID_HEIGHT))
     
     def draw(self):
+        self.screen.fill(BLACK)
         self.draw_level()
+        self.screen.blit(self.level_anim[self.level_frame], (0, 0))
         self.draw_grid()
         self.all_sprites.draw(self.screen)
         pg.display.flip()
@@ -127,11 +129,10 @@ class Game:
         now = pg.time.get_ticks()
         if now - self.last_update > 800:
             self.last_update = now
-            if self.bg_frames > 11:
-                self.bg_frames = 0
+            if self.level_frame > 11:
+                self.level_frame = 0
             else:
-                self.screen.blit(self.level_anim[self.bg_frames], (0, 0))
-                self.bg_frames += 1
+                self.level_frame += 1
 
     def events(self):
         for event in pg.event.get():
