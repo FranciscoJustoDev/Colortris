@@ -12,6 +12,7 @@ from computations import *
 class Game:
     def __init__(self):
         pg.init()
+        pg.mixer.init()
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
@@ -20,6 +21,50 @@ class Game:
     def load_data(self):
         self.grid_data = grid_data_load()
         self.grid_map = grid_map_pop()
+        self.load_graphics()
+        self.load_audio()
+
+    def load_graphics(self):
+        # Monster graphics
+        self.slime_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/slime')
+        self.ghost_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/ghost')
+        self.bogo_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/bogo')
+        self.vala_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/vala')
+        
+        self.slime_anim = []
+        for n in range(0, 12):
+            filename = 'slime-{}.png'.format(n)
+            img = pg.image.load(path.join(self.slime_dir, filename))
+            img.set_colorkey(BLACK)
+            img_scaled = pg.transform.scale(img, (78, 78))
+            self.slime_anim.append(img_scaled)
+        
+        self.ghost_anim = []
+        for n in range(0, 12):
+            filename = 'ghost-{}.png'.format(n)
+            img = pg.image.load(path.join(self.ghost_dir, filename))
+            img.set_colorkey(BLACK)
+            img_scaled = pg.transform.scale(img, (78, 78))
+            self.ghost_anim.append(img_scaled)
+        
+        self.bogo_anim = []
+        for n in range(0, 12):
+            filename = 'bogo-{}.png'.format(n)
+            img = pg.image.load(path.join(self.bogo_dir, filename))
+            img.set_colorkey(BLACK)
+            img_scaled = pg.transform.scale(img, (78, 78))
+            self.bogo_anim.append(img_scaled)
+        
+        self.vala_anim = []
+        for n in range(0, 12):
+            filename = 'vala-{}.png'.format(n)
+            img = pg.image.load(path.join(self.vala_dir, filename))
+            img.set_colorkey(BLACK)
+            img_scaled = pg.transform.scale(img, (78, 78))
+            self.vala_anim.append(img_scaled)
+
+    def load_audio(self):
+        pass
 
     def new(self):
         # init all variables and level setup
@@ -76,7 +121,7 @@ class Game:
                         if monster.active:
                             for e in self.grid_data:
                                 if e[0] == monster.sector:
-                                    if monster.rect.x > GRID_ORIGIN[0]:
+                                    if monster.sector[0] > 0:
                                         if self.grid_map[monster.sector[1]][monster.sector[0] - 1] == 0:
                                             monster.rect.x -= CELL_SIZE
                                             self.spawn_column -= CELL_SIZE
@@ -85,7 +130,7 @@ class Game:
                         if monster.active:
                             for e in self.grid_data:
                                 if e[0] == monster.sector:
-                                    if monster.rect.x < GRID_WIDTH - CELL_SIZE:
+                                    if monster.sector[0] < N_COLS - 1:
                                         if self.grid_map[monster.sector[1]][monster.sector[0] + 1] == 0:
                                             monster.rect.x += CELL_SIZE
                                             self.spawn_column += CELL_SIZE
@@ -102,16 +147,25 @@ class Game:
     
     def spawn_monster(self):
         monster_type = rdm.randint(1, 4)
+        if monster_type == 1:
+            anim = self.slime_anim
+        elif monster_type == 2:
+            anim = self.ghost_anim
+        elif monster_type == 3:
+            anim = self.bogo_anim
+        else:
+            anim = self.vala_anim
+        
         if self.no_monsters:
             self.no_monsters = False
-            self.monster = Monster(self.grid_data, self.spawn_column, monster_type)
+            self.monster = Monster(self.grid_data, self.spawn_column, monster_type, anim)
             self.monster_sprites.add(self.monster)
             self.all_sprites.add(self.monster)
 
         for monster in self.monster_sprites:
             if not(monster.active) and not(monster.locked) and not(monster.tracked):
                 monster.locked = True
-                self.monster = Monster(self.grid_data, self.spawn_column, monster_type)
+                self.monster = Monster(self.grid_data, self.spawn_column, monster_type, anim)
                 self.monster_sprites.add(self.monster)
                 self.all_sprites.add(self.monster)
     
@@ -140,6 +194,7 @@ class Game:
                 y = monster.sector[1]
                 self.grid_map[y][x] = monster.type
                 monster.tracked = True
+                self.animation_manager()
     
     def monster_logic(self):
         hor = False
@@ -203,6 +258,84 @@ class Game:
                         monster.tracked = False
                         monster.rect.y += CELL_SIZE
                         self.grid_map[monster.sector[1]][monster.sector[0]] = 0
+
+    def animation_manager(self):
+        for monster in self.monster_sprites:
+            x = monster.sector[0]
+            y = monster.sector[1]
+            if monster.active:
+                monster.init_frame = 0
+            elif monster.tracked:
+                if y == N_ROWS - 1:
+                    # is grounded
+                    if x == 0:
+                        #left
+                        if self.grid_map[y - 1][x] == 0 and self.grid_map[y][x + 1] == 0:
+                            #alone
+                            monster.init_frame = 3
+                        else:
+                            if self.grid_map[y - 1][x] == monster.type or self.grid_map[y][x + 1] == monster.type:
+                                #in love
+                                monster.init_frame = 9
+                            elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
+                                #upset - squished
+                                monster.init_frame = 6
+                            else:
+                                monster.init_frame = 0
+                    elif x == N_COLS - 1:
+                        #right
+                        if self.grid_map[y - 1][x] == 0 and self.grid_map[y][x - 1] == 0:
+                            #alone
+                            monster.init_frame = 3
+                        else:
+                            if self.grid_map[y - 1][x] == monster.type or self.grid_map[y][x - 1] == monster.type:
+                                #in love
+                                monster.init_frame = 9
+                            elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
+                                #upset - squished
+                                monster.init_frame = 6
+                            else:
+                                monster.init_frame = 0
+                    else:
+                        #middle
+                        if self.grid_map[y - 1][x] == 0 and self.grid_map[y][x - 1] == 0 and self.grid_map[y][x + 1] == 0:
+                            #alone
+                            monster.init_frame = 3
+                        else:
+                            if self.grid_map[y - 1][x] == monster.type or self.grid_map[y][x - 1] == monster.type or self.grid_map[y][x + 1] == monster.type:
+                                #in love
+                                monster.init_frame = 9
+                            elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
+                                #upset - squished
+                                monster.init_frame = 6
+                            else:
+                                monster.init_frame = 0
+                else:
+                    # Not grounded / Alone always false
+                    if x == 0:
+                        #left
+                        if self.grid_map[y - 1][x] == monster.type or self.grid_map[y + 1][x] == monster.type or self.grid_map[y][x + 1] == monster.type:
+                            #in love
+                            monster.init_frame = 9
+                        elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
+                            #upset
+                            monster.init_frame = 6
+                    elif x == N_COLS - 1:
+                        #right
+                        if self.grid_map[y - 1][x] == monster.type or self.grid_map[y + 1][x] == monster.type or self.grid_map[y][x - 1] == monster.type:
+                            #in love
+                            monster.init_frame = 9
+                        elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
+                            #upset
+                            monster.init_frame = 6
+                    else:
+                        #middle
+                        if self.grid_map[y - 1][x] == monster.type or self.grid_map[y + 1][x] == monster.type or self.grid_map[y][x + 1] == monster.type or self.grid_map[y][x - 1] == monster.type:
+                            #in love
+                            monster.init_frame = 9
+                        elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
+                            #squished
+                            monster.init_frame = 6
 
     def show_start_screen(self):
         pass

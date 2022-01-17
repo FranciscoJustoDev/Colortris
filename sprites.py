@@ -4,13 +4,12 @@ from settings import *
 import random as rdm
 
 class Monster(pg.sprite.Sprite):
-    def __init__(self, sector_data, spawn_col, monster_type):
+    def __init__(self, sector_data, spawn_col, monster_type, sprites):
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((CELL_SIZE, CELL_SIZE))
+        self.sprites = sprites
+        self.image = self.sprites[0]
         self.type = monster_type
         self.sector = (-1, -1)
-        self.color = CHIP_COLORS[self.type]
-        self.image.fill(self.color)
         self.rect = self.image.get_rect()
         # start in current column
         self.rect.center = (spawn_col, GRID_ORIGIN[1] + CELL_SIZE / 2)
@@ -21,6 +20,10 @@ class Monster(pg.sprite.Sprite):
         self.locked = False
         # acknowledge in the map
         self.tracked = False
+        self.last_update = pg.time.get_ticks()
+        self.anim_frame = 0
+        self.init_frame = 0
+        self.n_frames = 3
     
     def get_sector(self, pos, sec_data):
         # checks if pos (centerxy) is in given range
@@ -30,3 +33,13 @@ class Monster(pg.sprite.Sprite):
 
     def update(self):
         self.sector = self.get_sector((self.rect.centerx, self.rect.centery), self.sector_data)
+        now = pg.time.get_ticks()
+        if now - self.last_update > MONSTER_ANIM_FPS:
+            self.last_update = now
+            if self.n_frames > 2:
+                self.n_frames = 0
+                self.anim_frame = self.init_frame
+            else:
+                self.image = self.sprites[self.anim_frame]
+                self.anim_frame += 1
+                self.n_frames += 1
