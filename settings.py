@@ -16,17 +16,17 @@ PURPLE = (128, 0, 128)
 TEAL = (0, 128, 128)
 NAVY = (0, 0, 128)
 
-# WINDOW
+# WINDOW / GRID
 '''
-WIDTH = 1280
-HEIGHT = 720
+WIDTH = 448
+HEIGHT = 640
 '''
+# grid area + margins (32 sides, 16 top/bottom)
+GRID_ORIGIN = (32, 32)
 WIDTH = 512
-HEIGHT = 672
+HEIGHT = 704
 TITLE = "<3 Monster Cupid <3"
 
-# Grid
-GRID_ORIGIN = (32, 16)
 N_COLS = 7
 N_ROWS = 10
 CELL_SIZE = 64

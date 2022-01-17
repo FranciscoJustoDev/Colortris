@@ -2,15 +2,15 @@
 >
 >## ONGOING
 >
-> - monster sprites.  
+> Level Graphics:  
+>
+> - sky, ground, frame.  
 >
 >## DO
 >
 >### GRAPHICS
 >
 > Effects for monster landing, love and dissapearing.  
->
-> Level - background.  
 >
 > Menu - backgrounds.  
 >
@@ -38,5 +38,6 @@
 >
 >### DONE
 >
+> - monster sprites.  
 > - Proper naming of variables, classes and functions.  
 >

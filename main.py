@@ -25,7 +25,7 @@ class Game:
         self.load_audio()
 
     def load_graphics(self):
-        # Monster graphics
+        # monster sprites
         self.slime_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/slime')
         self.ghost_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/ghost')
         self.bogo_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/bogo')
@@ -62,6 +62,17 @@ class Game:
             img.set_colorkey(BLACK)
             img_scaled = pg.transform.scale(img, (78, 78))
             self.vala_anim.append(img_scaled)
+        
+        # background sprites
+        self.level_dir = path.join(path.dirname(__file__), 'Assets/sprites/bgs/level')
+
+        self.level_anim = []
+        for n in range(0, 12):
+            filename = 'level_bg-{}.png'.format(n)
+            img = pg.image.load(path.join(self.level_dir, filename))
+            img.set_colorkey(BLACK)
+            img_scaled = pg.transform.scale(img, (64 * 8, 88 * 8))
+            self.level_anim.append(img_scaled)
 
     def load_audio(self):
         pass
@@ -73,6 +84,8 @@ class Game:
         self.spawn_column = GRID_WIDTH / 2 + (GRID_ORIGIN[0] - GRID_ORIGIN[0] / 2)
         self.no_monsters = True
         self.speed = 1
+        self.last_update = pg.time.get_ticks()
+        self.bg_frames = 0
 
     def run(self):
         # Game loop
@@ -105,11 +118,21 @@ class Game:
         pg.draw.line(self.screen, WHITE, (GRID_WIDTH, GRID_ORIGIN[1]), (GRID_WIDTH, GRID_HEIGHT))
     
     def draw(self):
-        self.screen.fill(BGCOLOR)
+        self.draw_level()
         self.draw_grid()
         self.all_sprites.draw(self.screen)
         pg.display.flip()
     
+    def draw_level(self):
+        now = pg.time.get_ticks()
+        if now - self.last_update > 800:
+            self.last_update = now
+            if self.bg_frames > 11:
+                self.bg_frames = 0
+            else:
+                self.screen.blit(self.level_anim[self.bg_frames], (0, 0))
+                self.bg_frames += 1
+
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
