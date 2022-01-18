@@ -75,7 +75,13 @@ class Game:
             self.level_anim.append(img_scaled)
 
     def load_audio(self):
-        pass
+        self.music_dir = path.join(path.dirname(__file__), "Assets/audio/music")
+        self.sfx_dir = path.join(path.dirname(__file__), "Assets/audio/sfx")
+
+        self.landing_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'land-test.wav'))
+        self.landing_sound.set_volume(0.15)
+        self.love_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'love.wav'))
+        self.love_sound.set_volume(0.05)
 
     def new(self):
         # init all variables and level setup
@@ -202,6 +208,7 @@ class Game:
                             if e[0] == monster.sector:
                                 monster.rect.centery = e[4]
                                 monster.active = False
+                                pg.mixer.Sound.play(self.landing_sound)
                 if monster.active:
                     if monster.sector[1] < N_ROWS - 1:
                         monster.rect.y += SPEED * self.speed
@@ -210,6 +217,7 @@ class Game:
                             if monster.sector == e[0]:
                                 monster.rect.centery = e[4]
                                 monster.active = False
+                        pg.mixer.Sound.play(self.landing_sound)
 
     def update_grid_map(self):
         for monster in self.monster_sprites:
@@ -301,6 +309,9 @@ class Game:
                             if self.grid_map[y - 1][x] == monster.type or self.grid_map[y][x + 1] == monster.type:
                                 #in love
                                 monster.init_frame = 9
+                                if monster.love_sfx == True:
+                                    pg.mixer.Sound.play(self.love_sound)
+                                    monster.love_sfx = False
                             elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
                                 #upset - squished
                                 monster.init_frame = 6
@@ -315,6 +326,9 @@ class Game:
                             if self.grid_map[y - 1][x] == monster.type or self.grid_map[y][x - 1] == monster.type:
                                 #in love
                                 monster.init_frame = 9
+                                if monster.love_sfx == True:
+                                    pg.mixer.Sound.play(self.love_sound)
+                                    monster.love_sfx = False
                             elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
                                 #upset - squished
                                 monster.init_frame = 6
@@ -329,6 +343,9 @@ class Game:
                             if self.grid_map[y - 1][x] == monster.type or self.grid_map[y][x - 1] == monster.type or self.grid_map[y][x + 1] == monster.type:
                                 #in love
                                 monster.init_frame = 9
+                                if monster.love_sfx == True:
+                                    pg.mixer.Sound.play(self.love_sound)
+                                    monster.love_sfx = False
                             elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
                                 #upset - squished
                                 monster.init_frame = 6
@@ -341,6 +358,9 @@ class Game:
                         if self.grid_map[y - 1][x] == monster.type or self.grid_map[y + 1][x] == monster.type or self.grid_map[y][x + 1] == monster.type:
                             #in love
                             monster.init_frame = 9
+                            if monster.love_sfx == True:
+                                pg.mixer.Sound.play(self.love_sound)
+                                monster.love_sfx = False
                         elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
                             #upset
                             monster.init_frame = 6
@@ -349,6 +369,9 @@ class Game:
                         if self.grid_map[y - 1][x] == monster.type or self.grid_map[y + 1][x] == monster.type or self.grid_map[y][x - 1] == monster.type:
                             #in love
                             monster.init_frame = 9
+                            if monster.love_sfx == True:
+                                pg.mixer.Sound.play(self.love_sound)
+                                monster.love_sfx = False
                         elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
                             #upset
                             monster.init_frame = 6
@@ -357,6 +380,9 @@ class Game:
                         if self.grid_map[y - 1][x] == monster.type or self.grid_map[y + 1][x] == monster.type or self.grid_map[y][x + 1] == monster.type or self.grid_map[y][x - 1] == monster.type:
                             #in love
                             monster.init_frame = 9
+                            if monster.love_sfx == True:
+                                pg.mixer.Sound.play(self.love_sound)
+                                monster.love_sfx = False
                         elif self.grid_map[y - 1][x] != monster.type and self.grid_map[y - 1][x] != 0:
                             #squished
                             monster.init_frame = 6

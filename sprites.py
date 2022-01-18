@@ -24,6 +24,8 @@ class Monster(pg.sprite.Sprite):
         self.anim_frame = 0
         self.init_frame = 0
         self.n_frames = 3
+        self.love_sfx = True
+        self.upset_sfx = True
     
     def get_sector(self, pos, sec_data):
         # checks if pos (centerxy) is in given range
