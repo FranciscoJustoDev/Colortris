@@ -19,8 +19,6 @@ class Game:
         self.load_data()
 
     def load_data(self):
-        self.grid_data = grid_data_load()
-        self.grid_map = grid_map_pop()
         self.load_graphics()
         self.load_audio()
 
@@ -87,6 +85,10 @@ class Game:
         # init all variables and level setup
         self.all_sprites = pg.sprite.Group()
         self.monster_sprites = pg.sprite.Group()
+        self.all_sprites.empty()
+        self.monster_sprites.empty()
+        self.grid_data = grid_data_load()
+        self.grid_map = grid_map_pop()
         self.spawn_column = GRID_WIDTH / 2 + (GRID_ORIGIN[0] - GRID_ORIGIN[0] / 2)
         self.no_monsters = True
         self.speed = 1
@@ -222,11 +224,14 @@ class Game:
     def update_grid_map(self):
         for monster in self.monster_sprites:
             if not(monster.active) and monster.locked and not(monster.tracked):
-                x = monster.sector[0]
-                y = monster.sector[1]
-                self.grid_map[y][x] = monster.type
-                monster.tracked = True
-                self.animation_manager()
+                if monster.sector[1] == 0:
+                    self.game_running = False
+                else:
+                    x = monster.sector[0]
+                    y = monster.sector[1]
+                    self.grid_map[y][x] = monster.type
+                    monster.tracked = True
+                    self.animation_manager()
     
     def monster_logic(self):
         hor = False
@@ -387,15 +392,57 @@ class Game:
                             #squished
                             monster.init_frame = 6
 
-    def show_start_screen(self):
-        pass
+    def start_menu(self):
+        
+        self.start_menu_running = True
+        while self.start_menu_running:
+            self.start_menu_events()
+            self.start_menu_update()
+            self.start_menu_draw()
+            pass
     
-    def show_go_screen(self):
+    def start_menu_events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.quit()
+            
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_BACKSPACE:
+                    self.start_menu_running = False
+
+    def start_menu_update(self):
         pass
+
+    def start_menu_draw(self):
+        self.screen.fill(CYAN)
+        pg.display.flip()
+    
+    def go_menu(self):
+        self.go_menu_running = True
+        while self.go_menu_running:
+            self.go_menu_events()
+            self.go_menu_update()
+            self.go_menu_draw()
+    
+    def go_menu_events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.quit()
+            
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_BACKSPACE:
+                    self.go_menu_running = False
+
+    def go_menu_update(self):
+        pass
+
+    def go_menu_draw(self):
+        self.screen.fill(RED)
+        pg.display.flip()
 
 g = Game()
 while True:
-    g.show_start_screen()
+    g.start_menu()
     g.new()
     g.run()
-    g.show_go_screen()
+    g.go_menu()
