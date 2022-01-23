@@ -25,68 +25,58 @@ class Game:
         self.load_audio()
 
     def load_graphics(self):
-        # level
-        self.slime_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/slime')
-        self.ghost_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/ghost')
-        self.bogo_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/bogo')
-        self.vala_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/vala')
+        self.level_dir = path.join(path.dirname(__file__), 'Assets/sprites/level')
         
         self.slime_anim = []
         for n in range(0, 12):
-            filename = 'slime-{}.png'.format(n)
-            img = pg.image.load(path.join(self.slime_dir, filename))
+            filename = 'monsters/slime/slime-{}.png'.format(n)
+            img = pg.image.load(path.join(self.level_dir, filename))
             img.set_colorkey(BLACK)
             img_scaled = pg.transform.scale(img, (78, 78))
             self.slime_anim.append(img_scaled)
         
         self.ghost_anim = []
         for n in range(0, 12):
-            filename = 'ghost-{}.png'.format(n)
-            img = pg.image.load(path.join(self.ghost_dir, filename))
+            filename = 'monsters/ghost/ghost-{}.png'.format(n)
+            img = pg.image.load(path.join(self.level_dir, filename))
             img.set_colorkey(BLACK)
             img_scaled = pg.transform.scale(img, (78, 78))
             self.ghost_anim.append(img_scaled)
         
         self.bogo_anim = []
         for n in range(0, 12):
-            filename = 'bogo-{}.png'.format(n)
-            img = pg.image.load(path.join(self.bogo_dir, filename))
+            filename = 'monsters/bogo/bogo-{}.png'.format(n)
+            img = pg.image.load(path.join(self.level_dir, filename))
             img.set_colorkey(BLACK)
             img_scaled = pg.transform.scale(img, (78, 78))
             self.bogo_anim.append(img_scaled)
         
         self.vala_anim = []
         for n in range(0, 12):
-            filename = 'vala-{}.png'.format(n)
-            img = pg.image.load(path.join(self.vala_dir, filename))
+            filename = 'monsters/vala/vala-{}.png'.format(n)
+            img = pg.image.load(path.join(self.level_dir, filename))
             img.set_colorkey(BLACK)
             img_scaled = pg.transform.scale(img, (78, 78))
             self.vala_anim.append(img_scaled)
-        
-        self.level_dir = path.join(path.dirname(__file__), 'Assets/sprites/bgs/level')
 
         self.level_anim = []
         for n in range(0, 12):
-            filename = 'level_bg-{}.png'.format(n)
+            filename = 'bg/level_bg-{}.png'.format(n)
             img = pg.image.load(path.join(self.level_dir, filename))
             img.set_colorkey(BLACK)
             img_scaled = pg.transform.scale(img, (64 * 8, 88 * 8))
             self.level_anim.append(img_scaled)
 
-        # start menu
+        self.start_dir = path.join(path.dirname(__file__), 'Assets/sprites/startmenu')
 
-        self.start_dir = path.join(path.dirname(__file__), 'Assets/sprites/bgs/start')
-        self.buttons_dir = path.join(path.dirname(__file__), 'Assets/sprites/buttons')
-        self.fx_dir = path.join(path.dirname(__file__), 'Assets/sprites/fx')
-
-        img = pg.image.load(path.join(self.buttons_dir, 'menu_buttons_text.png'))
+        img = pg.image.load(path.join(self.start_dir, 'buttons/menu_buttons_text.png'))
         self.button_img = pg.transform.scale(img, (128, 256))
-        img = pg.image.load(path.join(self.fx_dir, 'heart-0.png'))
+        img = pg.image.load(path.join(self.start_dir, 'cursor/heart-0.png'))
         self.cursor_img = pg.transform.scale(img, (48, 48))
 
         self.mana_pool_anim = []
         for n in range(0, 31):
-            filename = 'mana_pool-rot-{}.png'.format(n)
+            filename = 'manapool/mana_pool-rot-{}.png'.format(n)
             img = pg.image.load(path.join(self.start_dir, filename))
             img.set_colorkey(BLACK)
             img_scaled = pg.transform.scale(img, (64 * 3, 88 * 3))
