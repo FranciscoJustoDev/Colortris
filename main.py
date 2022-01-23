@@ -1,3 +1,5 @@
+from distutils.command.sdist import sdist
+from posixpath import dirname
 import pygame as pg
 import random as rdm
 import sys
@@ -23,7 +25,7 @@ class Game:
         self.load_audio()
 
     def load_graphics(self):
-        # monster sprites
+        # level
         self.slime_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/slime')
         self.ghost_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/ghost')
         self.bogo_dir = path.join(path.dirname(__file__), 'Assets/sprites/monsters/bogo')
@@ -61,7 +63,6 @@ class Game:
             img_scaled = pg.transform.scale(img, (78, 78))
             self.vala_anim.append(img_scaled)
         
-        # background sprites
         self.level_dir = path.join(path.dirname(__file__), 'Assets/sprites/bgs/level')
 
         self.level_anim = []
@@ -72,16 +73,42 @@ class Game:
             img_scaled = pg.transform.scale(img, (64 * 8, 88 * 8))
             self.level_anim.append(img_scaled)
 
+        # start menu
+
+        self.start_dir = path.join(path.dirname(__file__), 'Assets/sprites/bgs/start')
+        self.buttons_dir = path.join(path.dirname(__file__), 'Assets/sprites/buttons')
+        self.fx_dir = path.join(path.dirname(__file__), 'Assets/sprites/fx')
+
+        img = pg.image.load(path.join(self.buttons_dir, 'menu_buttons_text.png'))
+        self.button_img = pg.transform.scale(img, (128, 256))
+        img = pg.image.load(path.join(self.fx_dir, 'heart-0.png'))
+        self.cursor_img = pg.transform.scale(img, (48, 48))
+
+        self.mana_pool_anim = []
+        for n in range(0, 31):
+            filename = 'mana_pool-rot-{}.png'.format(n)
+            img = pg.image.load(path.join(self.start_dir, filename))
+            img.set_colorkey(BLACK)
+            img_scaled = pg.transform.scale(img, (64 * 3, 88 * 3))
+            self.mana_pool_anim.append(img_scaled)
+
     def load_audio(self):
         self.music_dir = path.join(path.dirname(__file__), "Assets/audio/music")
         self.sfx_dir = path.join(path.dirname(__file__), "Assets/audio/sfx")
 
-        self.landing_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'land-test.wav'))
-        self.landing_sound.set_volume(0.15)
-        self.love_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'love.wav'))
-        self.love_sound.set_volume(0.05)
+        self.menu_music = path.join(self.music_dir, 'menu_track.wav')
+        self.game_music = path.join(self.music_dir, 'level_track.wav')
 
-    def new(self):
+        self.button_pressed_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'button-click.wav'))
+        self.button_select1_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'button-select-1.wav'))
+        self.button_select2_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'button-select-2.wav'))
+        self.highscore_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'button-select-2.wav'))
+        self.score_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'score.wav'))
+        self.land_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'land.wav'))
+        self.love_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'love.wav'))
+        self.lose_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'lose.wav'))
+
+    def level_setup(self):
         # init all variables and level setup
         self.all_sprites = pg.sprite.Group()
         self.monster_sprites = pg.sprite.Group()
@@ -92,23 +119,26 @@ class Game:
         self.spawn_column = GRID_WIDTH / 2 + (GRID_ORIGIN[0] - GRID_ORIGIN[0] / 2)
         self.no_monsters = True
         self.speed = 1
-        self.last_update = pg.time.get_ticks()
+        self.level_last_update = pg.time.get_ticks()
         self.level_frame = 0
+        pg.mixer.music.unload()
+        pg.mixer.music.load(self.game_music)
+        pg.mixer.music.play(-1)
 
-    def run(self):
+    def level_run(self):
         # Game loop
         self.game_running = True
         while self.game_running:
             self.dt = self.clock.tick(FPS) / 1000
             self.events()
-            self.update()
+            self.level_update()
             self.draw()
 
     def quit(self):
         pg.quit()
         sys.exit()
     
-    def update(self):
+    def level_update(self):
         self.all_sprites.update()
         self.spawn_monster()
         self.dwn_mov()
@@ -135,8 +165,8 @@ class Game:
     
     def draw_level(self):
         now = pg.time.get_ticks()
-        if now - self.last_update > 800:
-            self.last_update = now
+        if now - self.level_last_update > 800:
+            self.level_last_update = now
             if self.level_frame > 10:
                 self.level_frame = 0
             else:
@@ -210,7 +240,7 @@ class Game:
                             if e[0] == monster.sector:
                                 monster.rect.centery = e[4]
                                 monster.active = False
-                                pg.mixer.Sound.play(self.landing_sound)
+                                pg.mixer.Sound.play(self.land_sound)
                 if monster.active:
                     if monster.sector[1] < N_ROWS - 1:
                         monster.rect.y += SPEED * self.speed
@@ -219,7 +249,7 @@ class Game:
                             if monster.sector == e[0]:
                                 monster.rect.centery = e[4]
                                 monster.active = False
-                        pg.mixer.Sound.play(self.landing_sound)
+                        pg.mixer.Sound.play(self.land_sound)
 
     def update_grid_map(self):
         for monster in self.monster_sprites:
@@ -279,12 +309,16 @@ class Game:
                 for k in hor_kill_queue:
                     if monster.sector == k:
                         monster.kill()
+                        pg.mixer.Sound.stop(self.love_sound)
+                        pg.mixer.Sound.play(self.score_sound)
                         self.grid_map[monster.sector[1]][monster.sector[0]] = 0
 
         for monster in self.monster_sprites:
                 for k in ver_kill_queue:
                     if monster.sector == k:
                         monster.kill()
+                        pg.mixer.Sound.stop(self.love_sound)
+                        pg.mixer.Sound.play(self.score_sound)
                         self.grid_map[monster.sector[1]][monster.sector[0]] = 0
 
         # update floating sprites
@@ -392,8 +426,15 @@ class Game:
                             #squished
                             monster.init_frame = 6
 
-    def start_menu(self):
-        
+    def start_menu_setup(self):
+        self.start_menu_last_update = pg.time.get_ticks()
+        self.mana_pool_frame = 0
+        self.button_current = 0
+        pg.mixer.Sound.stop(self.lose_sound)
+        pg.mixer.music.load(self.menu_music)
+        pg.mixer.music.play(-1)
+
+    def start_menu_run(self):
         self.start_menu_running = True
         while self.start_menu_running:
             self.start_menu_events()
@@ -402,22 +443,78 @@ class Game:
             pass
     
     def start_menu_events(self):
+        select_n = rdm.randint(1, 2)
+        if select_n == 1:
+            button_sound = self.button_select1_sound
+        else:
+            button_sound = self.button_select2_sound
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit()
             
             if event.type == pg.KEYDOWN:
-                if event.key == pg.K_BACKSPACE:
-                    self.start_menu_running = False
+                # Perform button action
+                if event.key == pg.K_RETURN:
+                    if self.button_current == 0:
+                        self.start_menu_running = False
+                    elif self.button_current == 1:
+                        pg.mixer.Sound.play(self.button_pressed_sound)
+                    else:
+                        self.quit()
+                
+                # change button
+                if event.key == pg.K_UP:
+                    if self.button_current == 0:
+                        self.button_current = 2
+                        pg.mixer.Sound.play(button_sound)
+                    elif self.button_current == 1:
+                        self.button_current = 0
+                        pg.mixer.Sound.play(button_sound)
+                    else:
+                        self.button_current = 1
+                        pg.mixer.Sound.play(button_sound)
+                
+                if event.key == pg.K_DOWN:
+                    if self.button_current == 0:
+                        self.button_current = 1
+                        pg.mixer.Sound.play(button_sound)
+                    elif self.button_current == 1:
+                        self.button_current = 2
+                        pg.mixer.Sound.play(button_sound)
+                    else:
+                        self.button_current = 0
+                        pg.mixer.Sound.play(button_sound)
 
     def start_menu_update(self):
         pass
 
     def start_menu_draw(self):
-        self.screen.fill(CYAN)
+        self.screen.fill(BLACK)
+        self.screen.blit(self.button_img, (192, 308))
+        
+        if self.button_current == 0:
+            self.screen.blit(self.cursor_img, (152, 332))
+        elif self.button_current == 1:
+            self.screen.blit(self.cursor_img, (142, 408))
+        else:
+            self.screen.blit(self.cursor_img, (168, 494))
+
+        now = pg.time.get_ticks()
+        if now - self.start_menu_last_update > 350:
+            self.start_menu_last_update = now
+            if self.mana_pool_frame > 29:
+                self.mana_pool_frame = 0
+            else:
+                self.mana_pool_frame += 1
+        self.screen.blit(self.mana_pool_anim[self.mana_pool_frame], (162, 32))
         pg.display.flip()
-    
-    def go_menu(self):
+
+    def go_menu_setup(self):
+        pg.mixer.music.unload()
+        pg.mixer.Sound.play(self.lose_sound)
+
+    def go_menu_run(self):
         self.go_menu_running = True
         while self.go_menu_running:
             self.go_menu_events()
@@ -430,7 +527,7 @@ class Game:
                 self.quit()
             
             if event.type == pg.KEYDOWN:
-                if event.key == pg.K_BACKSPACE:
+                if event.key == pg.K_RETURN:
                     self.go_menu_running = False
 
     def go_menu_update(self):
@@ -442,7 +539,9 @@ class Game:
 
 g = Game()
 while True:
-    g.start_menu()
-    g.new()
-    g.run()
-    g.go_menu()
+    g.start_menu_setup()
+    g.start_menu_run()
+    g.level_setup()
+    g.level_run()
+    g.go_menu_setup()
+    g.go_menu_run()
