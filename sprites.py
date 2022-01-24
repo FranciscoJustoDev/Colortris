@@ -3,6 +3,16 @@ from computations import *
 from settings import *
 import random as rdm
 
+class Text(pg.sprite.Sprite):
+    def __init__(self, font, text, color, pos):
+        pg.sprite.Sprite.__init__(self)
+        self.font = font
+        self.text = text
+        self.color = color
+        self.image = self.font.render(text, False, color)
+        self.rect = self.image.get_rect()
+        self.rect.center = pos
+
 class Monster(pg.sprite.Sprite):
     def __init__(self, sector_data, spawn_col, monster_type, sprites):
         pg.sprite.Sprite.__init__(self)

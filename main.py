@@ -1,12 +1,9 @@
-from distutils.command.sdist import sdist
-from posixpath import dirname
+from multiprocessing.sharedctypes import Value
 import pygame as pg
 import random as rdm
 import sys
 from os import path
 
-from pygame import sprite
-from pygame.constants import KEYDOWN
 from settings import *
 from sprites import *
 from computations import *
@@ -18,6 +15,10 @@ class Game:
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
+        self.all_sprites = pg.sprite.Group()
+        self.monster_sprites = pg.sprite.Group()
+        self.menu_sprites = pg.sprite.Group()
+        self.credit_sprites = pg.sprite.Group()
         self.load_data()
 
     def load_data(self):
@@ -25,6 +26,13 @@ class Game:
         self.load_audio()
 
     def load_graphics(self):
+        self.font_18 = pg.font.Font("assets/fonts/PixelatedPusab.ttf", 18)
+        self.font_24 = pg.font.Font("assets/fonts/PixelatedPusab.ttf", 24)
+        self.font_36 = pg.font.Font("assets/fonts/PixelatedPusab.ttf", 36)
+        self.font_text_18 = pg.font.Font("assets/fonts/Pixellari.ttf", 18)
+        self.font_text_24 = pg.font.Font("assets/fonts/Pixellari.ttf", 24)
+        self.font_text_36 = pg.font.Font("assets/fonts/Pixellari.ttf", 36)
+
         self.level_dir = path.join(path.dirname(__file__), 'Assets/sprites/level')
         
         self.slime_anim = []
@@ -69,8 +77,6 @@ class Game:
 
         self.start_dir = path.join(path.dirname(__file__), 'Assets/sprites/startmenu')
 
-        img = pg.image.load(path.join(self.start_dir, 'buttons/menu_buttons_text.png'))
-        self.button_img = pg.transform.scale(img, (128, 256))
         img = pg.image.load(path.join(self.start_dir, 'cursor/heart-0.png'))
         self.cursor_img = pg.transform.scale(img, (48, 48))
 
@@ -99,9 +105,6 @@ class Game:
         self.lose_sound = pg.mixer.Sound(path.join(self.sfx_dir, 'lose.wav'))
 
     def level_setup(self):
-        # init all variables and level setup
-        self.all_sprites = pg.sprite.Group()
-        self.monster_sprites = pg.sprite.Group()
         self.all_sprites.empty()
         self.monster_sprites.empty()
         self.grid_data = grid_data_load()
@@ -120,9 +123,9 @@ class Game:
         self.game_running = True
         while self.game_running:
             self.dt = self.clock.tick(FPS) / 1000
-            self.events()
+            self.level_events()
             self.level_update()
-            self.draw()
+            self.level_draw()
 
     def quit(self):
         pg.quit()
@@ -145,7 +148,7 @@ class Game:
             pg.draw.line(self.screen, WHITE, (GRID_ORIGIN[0], y), (GRID_WIDTH, y))
         pg.draw.line(self.screen, WHITE, (GRID_WIDTH, GRID_ORIGIN[1]), (GRID_WIDTH, GRID_HEIGHT))
     
-    def draw(self):
+    def level_draw(self):
         self.screen.fill(BLACK)
         self.draw_level()
         self.screen.blit(self.level_anim[self.level_frame], (0, 0))
@@ -162,7 +165,7 @@ class Game:
             else:
                 self.level_frame += 1
 
-    def events(self):
+    def level_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit()
@@ -418,8 +421,37 @@ class Game:
 
     def start_menu_setup(self):
         self.start_menu_last_update = pg.time.get_ticks()
+        self.all_sprites.empty()
+        self.menu_sprites.empty()
+        self.start_text = Text(self.font_36, "Start", GREEN, (WIDTH/2, HEIGHT/2))
+        self.credits_text = Text(self.font_36, "Credits", CYAN, (WIDTH/2, HEIGHT/2 + 100))
+        self.exit_text = Text(self.font_36, "Exit", MAGENTA, (WIDTH/2, HEIGHT/2 + 200))
+        self.menu_sprites.add(self.start_text)
+        self.menu_sprites.add(self.credits_text)
+        self.menu_sprites.add(self.exit_text)
+
+        self.credits_info = {
+            'h1' : [self.font_36, "Art and Code:", MAGENTA, (WIDTH/2, 100)],
+            'h1_name' : [self.font_text_24, "Francisco Justo", WHITE, (WIDTH/2, 140)],
+            'h1_email' : [self.font_text_24, "franciscojusto.dev@gmail.com", WHITE, (WIDTH/2, 170)],
+            'h1_itch' : [self.font_text_24, "https://franciscojustodev.itch.io/", WHITE, (WIDTH/2, 200)],
+            'h2' : [self.font_36, "Sound Design:", YELLOW, (WIDTH/2, 260)],
+            'h2_name' : [self.font_text_24, "Nelson Milheiro", WHITE, (WIDTH/2, 300)],
+            'h2_email' : [self.font_text_24, "nelsonfcmilheiro@gmail.com", WHITE, (WIDTH/2, 330)],
+            'h2_itch' : [self.font_text_24, "https://mikapuccino.itch.io/", WHITE, (WIDTH/2, 360)],
+            'h3' : [self.font_text_24, "Pixellari font:", WHITE, (WIDTH/2, 500)],
+            'h3_name' : [self.font_text_24, "Zacchary Dempsey-Plante", WHITE, (WIDTH/2, 524)],
+            'h4' : [self.font_24, "Pixelated Pusab font:", WHITE, (WIDTH/2, 550)],
+            'h4_name': [self.font_24, "JumperBox Games", WHITE, (WIDTH/2, 574)]
+        }
+
+        for key, value in self.credits_info.items():
+            t = Text(value[0], value[1], value[2], value[3])
+            self.credit_sprites.add(t)
+
         self.mana_pool_frame = 0
         self.button_current = 0
+        self.screen_active = 0
         pg.mixer.Sound.stop(self.lose_sound)
         pg.mixer.music.load(self.menu_music)
         pg.mixer.music.play(-1)
@@ -427,10 +459,12 @@ class Game:
     def start_menu_run(self):
         self.start_menu_running = True
         while self.start_menu_running:
-            self.start_menu_events()
-            self.start_menu_update()
-            self.start_menu_draw()
-            pass
+            if self.screen_active == 0:
+                self.start_menu_events()
+                self.start_menu_update()
+                self.start_menu_draw()
+            elif self.screen_active == 1:
+                self.start_menu_credits()
     
     def start_menu_events(self):
         select_n = rdm.randint(1, 2)
@@ -450,6 +484,7 @@ class Game:
                         self.start_menu_running = False
                     elif self.button_current == 1:
                         pg.mixer.Sound.play(self.button_pressed_sound)
+                        self.screen_active = 1
                     else:
                         self.quit()
                 
@@ -481,14 +516,12 @@ class Game:
 
     def start_menu_draw(self):
         self.screen.fill(BLACK)
-        self.screen.blit(self.button_img, (192, 308))
-        
         if self.button_current == 0:
-            self.screen.blit(self.cursor_img, (152, 332))
+            self.screen.blit(self.cursor_img, (158, HEIGHT/2 - 20))
         elif self.button_current == 1:
-            self.screen.blit(self.cursor_img, (142, 408))
+            self.screen.blit(self.cursor_img, (142, HEIGHT/2 + 100))
         else:
-            self.screen.blit(self.cursor_img, (168, 494))
+            self.screen.blit(self.cursor_img, (168, HEIGHT/2 + 200))
 
         now = pg.time.get_ticks()
         if now - self.start_menu_last_update > 350:
@@ -498,6 +531,21 @@ class Game:
             else:
                 self.mana_pool_frame += 1
         self.screen.blit(self.mana_pool_anim[self.mana_pool_frame], (162, 32))
+        self.menu_sprites.draw(self.screen)
+        pg.display.flip()
+
+    def start_menu_credits(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.quit()
+            
+            if event.type == pg.KEYDOWN:
+                # Perform button action
+                if event.key == pg.K_RETURN:
+                    self.screen_active = 0
+
+        self.screen.fill(BLACK)
+        self.credit_sprites.draw(self.screen)
         pg.display.flip()
 
     def go_menu_setup(self):
