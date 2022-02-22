@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 import pygame as pg
 import random as rdm
 import sys
@@ -26,14 +25,15 @@ class Game:
         self.load_audio()
 
     def load_graphics(self):
-        self.font_18 = pg.font.Font("assets/fonts/PixelatedPusab.ttf", 18)
-        self.font_24 = pg.font.Font("assets/fonts/PixelatedPusab.ttf", 24)
-        self.font_36 = pg.font.Font("assets/fonts/PixelatedPusab.ttf", 36)
-        self.font_text_18 = pg.font.Font("assets/fonts/Pixellari.ttf", 18)
-        self.font_text_24 = pg.font.Font("assets/fonts/Pixellari.ttf", 24)
-        self.font_text_36 = pg.font.Font("assets/fonts/Pixellari.ttf", 36)
+        self.fonts_dir = path.join(path.dirname(__file__), 'assets/fonts')
+        self.font_18 = pg.font.Font(path.join(self.fonts_dir, 'PixelatedPusab.ttf'), 18)
+        self.font_24 = pg.font.Font(path.join(self.fonts_dir, 'PixelatedPusab.ttf'), 24)
+        self.font_36 = pg.font.Font(path.join(self.fonts_dir, 'PixelatedPusab.ttf'), 36)
+        self.font_text_18 = pg.font.Font(path.join(self.fonts_dir, 'Pixellari.ttf'), 18)
+        self.font_text_24 = pg.font.Font(path.join(self.fonts_dir, 'Pixellari.ttf'), 24)
+        self.font_text_36 = pg.font.Font(path.join(self.fonts_dir, 'Pixellari.ttf'), 36)
 
-        self.level_dir = path.join(path.dirname(__file__), 'Assets/sprites/level')
+        self.level_dir = path.join(path.dirname(__file__), 'assets/sprites/level')
         
         self.slime_anim = []
         for n in range(0, 12):
@@ -75,7 +75,7 @@ class Game:
             img_scaled = pg.transform.scale(img, (64 * 8, 88 * 8))
             self.level_anim.append(img_scaled)
 
-        self.start_dir = path.join(path.dirname(__file__), 'Assets/sprites/startmenu')
+        self.start_dir = path.join(path.dirname(__file__), 'assets/sprites/startmenu')
 
         img = pg.image.load(path.join(self.start_dir, 'cursor/heart-0.png'))
         self.cursor_img = pg.transform.scale(img, (48, 48))
@@ -89,8 +89,8 @@ class Game:
             self.mana_pool_anim.append(img_scaled)
 
     def load_audio(self):
-        self.music_dir = path.join(path.dirname(__file__), "Assets/audio/music")
-        self.sfx_dir = path.join(path.dirname(__file__), "Assets/audio/sfx")
+        self.music_dir = path.join(path.dirname(__file__), "assets/audio/music")
+        self.sfx_dir = path.join(path.dirname(__file__), "assets/audio/sfx")
 
         self.menu_music = path.join(self.music_dir, 'menu_track.wav')
         self.game_music = path.join(self.music_dir, 'level_track.wav')
