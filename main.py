@@ -420,6 +420,9 @@ class Game:
                             monster.init_frame = 6
 
     def start_menu_setup(self):
+        self.mana_pool_frame = 0
+        self.button_current = 0
+        self.screen_active = 0
         self.start_menu_last_update = pg.time.get_ticks()
         self.all_sprites.empty()
         self.menu_sprites.empty()
@@ -441,17 +444,14 @@ class Game:
             'h2_itch' : [self.font_text_24, "https://mikapuccino.itch.io/", WHITE, (WIDTH/2, 360)],
             'h3' : [self.font_text_24, "Pixellari font:", WHITE, (WIDTH/2, 500)],
             'h3_name' : [self.font_text_24, "Zacchary Dempsey-Plante", WHITE, (WIDTH/2, 524)],
-            'h4' : [self.font_24, "Pixelated Pusab font:", WHITE, (WIDTH/2, 550)],
-            'h4_name': [self.font_24, "JumperBox Games", WHITE, (WIDTH/2, 574)]
+            'h4' : [self.font_24, "Pixelated Pusab font:", WHITE, (WIDTH/2, 560)],
+            'h4_name': [self.font_24, "JumperBox Games", WHITE, (WIDTH/2, 584)]
         }
 
         for key, value in self.credits_info.items():
             t = Text(value[0], value[1], value[2], value[3])
             self.credit_sprites.add(t)
 
-        self.mana_pool_frame = 0
-        self.button_current = 0
-        self.screen_active = 0
         pg.mixer.Sound.stop(self.lose_sound)
         pg.mixer.music.load(self.menu_music)
         pg.mixer.music.play(-1)
@@ -517,11 +517,11 @@ class Game:
     def start_menu_draw(self):
         self.screen.fill(BLACK)
         if self.button_current == 0:
-            self.screen.blit(self.cursor_img, (158, HEIGHT/2 - 20))
+            self.screen.blit(self.cursor_img, (152, HEIGHT/2 -26))
         elif self.button_current == 1:
-            self.screen.blit(self.cursor_img, (142, HEIGHT/2 + 100))
+            self.screen.blit(self.cursor_img, (132, HEIGHT/2 + 76))
         else:
-            self.screen.blit(self.cursor_img, (168, HEIGHT/2 + 200))
+            self.screen.blit(self.cursor_img, (164, HEIGHT/2 + 176))
 
         now = pg.time.get_ticks()
         if now - self.start_menu_last_update > 350:

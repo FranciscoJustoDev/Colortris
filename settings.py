@@ -37,10 +37,3 @@ BGCOLOR = BLACK
 FPS = 60
 SPEED = 2
 MONSTER_ANIM_FPS = 150
-
-CHIP_COLORS = {
-    1 : (0, 255, 255),
-    2 : (255, 0, 255),
-    3 : (255, 255, 0),
-    4 : (128, 0, 0)
-}
